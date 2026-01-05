@@ -1,0 +1,67 @@
+---
+- name: Install Java, Docker and Jenkins
+  hosts: all
+  become: yes
+
+  tasks:
+
+    # ---------------- System Update ----------------
+    - name: Update all packages
+      yum:
+        name: "*"
+        state: latest
+
+    # ---------------- Java Installation ----------------
+    - name: Install Java 17 (Required for Jenkins)
+      yum:
+        name: java-17-amazon-corretto
+        state: present
+
+    - name: Verify Java installation
+      command: java -version
+      register: java_output
+      changed_when: false
+
+    - debug:
+        msg: "{{ java_output.stderr }}"
+
+    # ---------------- Docker Installation ----------------
+    - name: Install Docker
+      yum:
+        name: docker
+        state: present
+
+    - name: Start and enable Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add ec2-user to docker group
+      user:
+        name: ec2-user
+        groups: docker
+        append: yes
+
+    # ---------------- Jenkins Installation ----------------
+    - name: Add Jenkins repository
+      get_url:
+        url: https://pkg.jenkins.io/redhat-stable/jenkins.repo
+        dest: /etc/yum.repos.d/jenkins.repo
+
+    - name: Import Jenkins GPG key
+      rpm_key:
+        key: https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+        state: present
+
+    - name: Install Jenkins
+      yum:
+        name: jenkins
+        state: present
+
+    - name: Start and enable Jenkins
+      service:
+        name: jenkins
+        state: started
+        enabled: yes
+
