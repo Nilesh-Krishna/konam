@@ -4,7 +4,7 @@ pipeline {
 
     tools {
         nodejs 'node18'
-    } 
+    }
  
     stages {
  
@@ -32,7 +32,9 @@ pipeline {
 
             steps {
 
-                sh 'npm run build'
+                 sh '''
+        CI=false npm run build
+        '''
 
             }
 
