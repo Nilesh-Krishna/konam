@@ -1,8 +1,0 @@
-FROM node:trixie-slim
-WORKDIR /app
-COPY package.*
-RUN npm install
-COPY . .
-RUN npm run build
-EXPOSE 80
-CMD [“ngnix”,”-g” ,”daemon off,”]
