@@ -1,0 +1,84 @@
+pipeline {
+
+    agent any
+
+    parameters {
+        string(
+            name: 'ARTIFACT_VERSION',
+            defaultValue: 'artifact-1',
+            description: 'Docker image tag to deploy (example: artifact-1, artifact-5)'
+        )
+    }
+
+    environment {
+        DOCKER_IMAGE = "dockerhub_username/konam-app"
+        CONTAINER_NAME = "konam-container"
+    }
+
+    stages {
+
+        stage('Validate Artifact Version') {
+            steps {
+                script {
+                    if (!params.ARTIFACT_VERSION?.trim()) {
+                        error "❌ ARTIFACT_VERSION cannot be empty"
+                    }
+                }
+            }
+        }
+
+        stage('Docker Login') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    '''
+                }
+            }
+        }
+
+        stage('Pull Docker Artifact') {
+            steps {
+                sh '''
+                docker pull ${DOCKER_IMAGE}:${ARTIFACT_VERSION}
+                '''
+            }
+        }
+
+        stage('Stop Existing Container') {
+            steps {
+                sh '''
+                docker stop ${CONTAINER_NAME} || true
+                docker rm ${CONTAINER_NAME} || true
+                '''
+            }
+        }
+
+        stage('Run Container from Selected Artifact') {
+            steps {
+                sh '''
+                docker run -d \
+                  --name ${CONTAINER_NAME} \
+                  -p 80:80 \
+                  ${DOCKER_IMAGE}:${ARTIFACT_VERSION}
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Deployed ${DOCKER_IMAGE}:${ARTIFACT_VERSION} successfully"
+        }
+        failure {
+            echo "❌ Deployment failed"
+        }
+        always {
+            sh 'docker logout || true'
+        }
+    }
+}
