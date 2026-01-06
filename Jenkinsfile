@@ -8,7 +8,7 @@ pipeline {
 
     environment {
         // CHANGE_ME
-        DOCKER_IMAGE = "dockerhub_username/konam-app"
+        DOCKER_IMAGE = "nilesh2509/konam-app"
 
         // Sonar scanner configured in Jenkins tools
         SONAR_SCANNER = tool 'SonarScanner'
@@ -80,7 +80,7 @@ pipeline {
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
                     sh """
-                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
                     docker push ${DOCKER_IMAGE}:artifact-${BUILD_NUMBER}
                     """
                 }
