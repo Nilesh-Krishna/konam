@@ -2,24 +2,31 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION = "ap-south-1"
+        AWS_REGION   = "ap-south-1"
         CLUSTER_NAME = "konam-cluster"
+        DOCKER_IMAGE = "nilesh2509/konam-app"
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
-        stage('Configure EKS Access') {
+        stage('Configure kubeconfig') {
             steps {
                 sh '''
-                  aws eks update-kubeconfig \
-                    --region $AWS_REGION \
-                    --name $CLUSTER_NAME
+                  mkdir -p ~/.kube
+                  aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+                '''
+            }
+        }
+
+        stage('Update image tag') {
+            steps {
+                sh '''
+                  sed -i "s/artifact-BUILD_NUMBER/artifact-${BUILD_NUMBER}/g" kubernets/deployment.yaml
                 '''
             }
         }
@@ -31,15 +38,6 @@ pipeline {
                   kubectl rollout status deployment/konam-app
                 '''
             }
-        }
-    }
-
-    post {
-        success {
-            echo "✅ Deployed to EKS successfully"
-        }
-        failure {
-            echo "❌ Deployment failed"
         }
     }
 }
