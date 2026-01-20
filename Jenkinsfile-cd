@@ -17,7 +17,7 @@ pipeline {
             steps {
                 sh '''
                   echo "Deploying to EKS..."
-                  kubectl apply -f k8s/
+                  kubectl apply -f kubernets/
                   kubectl rollout status deployment/konam-app
                 '''
             }
