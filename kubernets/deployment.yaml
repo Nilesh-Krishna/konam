@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: konam-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: konam-app
+  template:
+    metadata:
+      labels:
+        app: konam-app
+    spec:
+      containers:
+        - name: konam-app
+          image: nilesh2509/konam-app:artifact-BUILD_NUMBER
+          ports:
+            - containerPort: 80
