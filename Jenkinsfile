@@ -79,13 +79,12 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    sh '''
-          docker build -t nilesh2509/konam-app:artifact-${BUILD_NUMBER} .
-          docker push nilesh2509/konam-app:artifact-${BUILD_NUMBER}
-
-          docker tag nilesh2509/konam-app:artifact-${BUILD_NUMBER} nilesh2509/konam-app:latest
-          docker push nilesh2509/konam-app:latest
-        '''
+                    sh """
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    docker push ${DOCKER_IMAGE}:artifact-${BUILD_NUMBER}
+                    docker tag ${DOCKER_IMAGE}:artifact-${BUILD_NUMBER} ${DOCKER_IMAGE}:latest
+                    docker push ${DOCKER_IMAGE}:latestt
+                    """
                 }
             }
         }
