@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "nilesh2509/konam-app"
+    }
+
+    stages {
+
+        stage('Checkout Repo') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Deploy to EKS') {
+            steps {
+                sh '''
+                  echo "Deploying to EKS..."
+                  kubectl apply -f k8s/
+                  kubectl rollout status deployment/konam-app
+                '''
+            }
+        }
+
+        stage('Verify') {
+            steps {
+                sh '''
+                  kubectl get pods
+                  kubectl get svc
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Successfully deployed to EKS"
+        }
+        failure {
+            echo "❌ Deployment failed"
+        }
+    }
+}
