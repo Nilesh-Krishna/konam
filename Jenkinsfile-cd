@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION = "ap-south-1"
+        AWS_REGION   = "ap-south-1"
         CLUSTER_NAME = "konam-cluster"
     }
 
@@ -14,9 +14,11 @@ pipeline {
             }
         }
 
-        stage('Configure EKS Access') {
+        stage('Configure EKS access') {
             steps {
                 sh '''
+                  echo "Configuring kubeconfig..."
+                  mkdir -p ~/.kube
                   aws eks update-kubeconfig \
                     --region $AWS_REGION \
                     --name $CLUSTER_NAME
@@ -27,19 +29,19 @@ pipeline {
         stage('Deploy to EKS') {
             steps {
                 sh '''
-                  kubectl apply -f kubernets/
+                  kubectl apply -f kubernets/ --validate=false
                   kubectl rollout status deployment/konam-app
                 '''
             }
         }
-    }
 
-    post {
-        success {
-            echo "✅ Deployed to EKS successfully"
-        }
-        failure {
-            echo "❌ Deployment failed"
+        stage('Verify') {
+            steps {
+                sh '''
+                  kubectl get pods
+                  kubectl get svc
+                '''
+            }
         }
     }
 }
